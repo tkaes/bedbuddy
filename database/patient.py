@@ -36,7 +36,7 @@ class Patient:
         elif priority.lower() == "medium":
             color = "yellow"
         elif priority.lower() == "low":
-            color = "green2"
+            color = "green"
         else:
             color = "azure"  # fallback
 
