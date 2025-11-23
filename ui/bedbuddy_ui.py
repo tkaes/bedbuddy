@@ -12,9 +12,9 @@ MAX_BEDS_PER_BAY = 6
 
 # ---------- Fixed Sizes ----------
 BED_WIDTH = 80
-BED_HEIGHT = 100
-BAY_WIDTH = 300
-BAY_HEIGHT = 250
+BED_HEIGHT = 110
+BAY_WIDTH = 330
+BAY_HEIGHT = 270
 BEDS_PER_ROW = 3
 
 class BedBuddy:
