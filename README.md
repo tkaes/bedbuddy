@@ -1,7 +1,7 @@
 # BedBuddy: ER Bed Management System
 ## Authors: BedBuddy Development Team
 (Fall 2025, UCCS CS 3300)
-## Last Updated: 19 November 2025
+## Last Updated: 23 November 2025
 
 BedBuddy is a prototype desktop application built for emergency room settings to help track patients and bed availability.
 It combines a Tkinter graphical interface with a FastAPI backend that connects to a MongoDB Atlas cloud database.
