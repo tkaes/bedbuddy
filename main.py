@@ -1,7 +1,7 @@
 # Entry point for the BedBuddy application
 
-# This module initalizes the system by: 
-#   1. Retrieves patient records from the MongoDB Atalas database
+# This module initializes the system by:
+#   1. Retrieves patient records from the MongoDB Atlas database
 #   2. Displays basic patient info
 #   3. Launches the BedBuddy graphical interface
 #--------------
@@ -30,4 +30,3 @@ from ui.LoginApp import Login
 # Entry point: run Login GUI
 if __name__ == "__main__":
     Login().mainloop()
-

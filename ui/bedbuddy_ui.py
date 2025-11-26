@@ -1,3 +1,6 @@
+# BedBuddy class generates, displays, and updates UI
+# Database class called within it for MongoDB CRUD operations
+
 import tkinter as tk
 from tkinter import ttk, messagebox
 
@@ -5,8 +8,10 @@ from database.patient import Patient
 from config.db_config import get_db
 from database.db_operation import Database
 
+# ---------- Get MongoDB ----------
 database = Database(get_db())
 
+# ---------- Fixed Data ----------
 MAX_BAYS = 3
 MAX_BEDS_PER_BAY = 6
 
@@ -39,16 +44,26 @@ class BedBuddy:
 
     # ---------------- Initial Data Loading ---------------- #
     def load_db_bays(self):
-        bays = [int(bay) for bay in database.db.list_collection_names() if bay.isdigit()]
-        priority_colors = {"High": "red", "Medium": "orange", "Low": "green"}
+        bays = [
+            int(bay)
+            for bay in database.db.list_collection_names()
+            if bay.isdigit() and 1 <= int(bay) <= 6
+        ]
 
+        # Create "1" bay collection if none
+        if not bays:
+            database.create_bay(1)
+            bays = [1]
+
+        # Get patients in each bay
         for bay in bays:
             patients = database.get_bay_patients(bay)
-            for patient in patients:
-                if not getattr(patient, "color", None):
-                    patient.color = priority_colors.get(getattr(patient, "priority", "Medium"), "deeppink2")
+            # If no patients, load 1 empty
             if not patients:
-                patients = [Patient.empty(bay, "1")]
+                empty_patient = Patient.empty(bay, 1)
+                patients = [empty_patient]
+                # Create empty bed document in database
+                database.insert_patient(empty_patient)
             self.bay_beds[bay] = patients
 
     # ---------------- Sidebar ---------------- #
@@ -194,20 +209,22 @@ class BedBuddy:
                 messagebox.showwarning("Missing Info", "Please fill in all fields")
                 return
 
-            priority_colors = {"High": "red", "Medium": "orange", "Low": "green"}
-            color = priority_colors.get(priority, "deeppink2")
-
-            self.update_bed_info(Patient(
+            # Get existing bed document id
+            existing_id = database.find_create_patient(bay, bed)
+            # New patient with bed id loaded
+            new_patient = Patient(
                 first_name=first_name,
                 last_name=last_name,
                 dob=dob,
                 bay=bay,
                 bed=bed,
                 priority=priority,
-                color=color,
                 presence=True,
-                _id=None
-            ))
+                _id=existing_id.id
+            )
+            self.update_bed_info(new_patient)
+            # MONGODB - update bed with patient
+            database.update_patient(new_patient)
 
             # Refresh current view without switching tabs
             if self.current_bay is None:
@@ -251,10 +268,9 @@ class BedBuddy:
             patient.dob = dob_entry.get().strip()
             patient.priority = priority_var.get()
 
-            priority_colors = {"High": "red", "Medium": "orange", "Low": "green"}
-            patient.color = priority_colors.get(patient.priority, "deeppink2")
-
             self.update_bed_info(patient)
+            # MONGODB - update patient data
+            database.update_patient(patient)
 
             # Refresh current view without switching tabs
             if self.current_bay is None:
@@ -269,7 +285,12 @@ class BedBuddy:
             confirm = messagebox.askyesno("Remove Patient",
                                           f"Remove {patient.first_name} {patient.last_name} from Bed {patient.bed}?")
             if confirm:
-                self.update_bed_info(Patient.empty(patient.bay, patient.bed))
+                # Create empty patient
+                empty_patient = patient.empty_copy()
+                self.update_bed_info(empty_patient)
+                # MONGODB - Clear existing document
+                database.update_patient(empty_patient)
+
                 if self.current_bay is None:
                     self.show_all_bays()
                 else:
@@ -281,7 +302,6 @@ class BedBuddy:
         tk.Button(dialog, text="Remove Patient", command=remove_patient, bg="salmon", fg="white").pack(pady=5)
 
     # ---------------- Bed Methods ---------------- #
-    # ---------------- Bed Methods ---------------- #
     def create_bed(self, frame, patient):
         f = tk.Frame(frame, width=BED_WIDTH, height=BED_HEIGHT, bg="white", bd=1, relief="solid")
         f.pack_propagate(False)
@@ -289,7 +309,8 @@ class BedBuddy:
         # Patient icon if present
         icon_lbl = None
         if patient.presence:
-            icon_lbl = tk.Label(f, text="👤", fg=patient.color, bg="darkgray", font=("Arial", 25))
+            patient_color = patient.get_color()
+            icon_lbl = tk.Label(f, text="👤", fg=patient_color, bg="darkgray", font=("Arial", 25))
             icon_lbl.pack(side="top", pady=5)
 
         # Patient name or empty
@@ -406,6 +427,9 @@ class BedBuddy:
         bay_num = total_bays + 1
         self.bay_beds[bay_num] = []
 
+        # MONGODB - create bay collection
+        database.create_bay(bay_num)
+
         # Create button for new bay
         new_btn = tk.Button(self.bay_buttons_frame, text=f"- Bay {bay_num}", bg="lightgray", relief="flat",
                             command=lambda num=bay_num: self.show_bay(num))
@@ -426,6 +450,8 @@ class BedBuddy:
         confirm = messagebox.askyesno("Remove Bay", f"Remove Bay {last_bay}?")
         if confirm:
             del self.bay_beds[last_bay]
+            # MONGODB - drop bay collection
+            database.delete_bay(last_bay)
 
             if last_bay in self.bay_buttons:
                 self.bay_buttons[last_bay].destroy()
@@ -444,8 +470,14 @@ class BedBuddy:
             messagebox.showwarning("Limit Reached", f"Bay {self.current_bay} can only have {MAX_BEDS_PER_BAY} beds.")
             return
 
-        new_bed_name = f"{len(beds_in_bay) + 1}"
-        beds_in_bay.append(Patient.empty(self.current_bay, new_bed_name))
+        new_bed_num = len(beds_in_bay) + 1
+
+        empty_patient = Patient.empty(self.current_bay, new_bed_num)
+        beds_in_bay.append(empty_patient)
+
+        # MONGODB - create empty patient document
+        database.insert_patient(empty_patient)
+
         self.show_bay(self.current_bay)
 
     def remove_bed(self):
@@ -459,9 +491,14 @@ class BedBuddy:
             return
 
         bed_to_remove = beds_in_bay[-1]
-        confirm = messagebox.askyesno("Remove Bed", f"Remove {bed_to_remove.bed} from Bay {self.current_bay}?")
+        confirm = messagebox.askyesno("Remove Bed", f"Remove Bed {bed_to_remove.bed} from Bay {self.current_bay}?")
         if confirm:
             beds_in_bay.pop()
+
+            #MONGODB - remove patient document
+            if bed_to_remove.id:
+                string = database.delete_patient(bed_to_remove)
+
             self.show_bay(self.current_bay)
 
     # ---------------- Run ---------------- #

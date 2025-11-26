@@ -1,22 +1,24 @@
-# Setup db information
+# Database Config handles retrieval of sensitive information from environment file
+# And creation of Mongo client
+
 import os
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
-# 1 Find the bedbuddy root folder
+# 1. Find the bedbuddy root folder
 PROJECT_ROOT= os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # 2. Build the full path to backend/.env
 ENV_PATH= os.path.join(PROJECT_ROOT, "backend", ".env")
 
-# load variables from that .env file
+# 3. Load variables from that .env file
 load_dotenv(ENV_PATH)
 
-# MongoDB Atlas connection string
-#MONGO_URI = "YOUR MONGO URI"
+# 4. MongoDB Atlas connection string and name of database
 MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME = os.getenv("DB_NAME")
 
+# 5. Instantiation of client
 def get_db():
     client = MongoClient(MONGO_URI)
     return client[DB_NAME]
