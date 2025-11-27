@@ -72,6 +72,7 @@ This approach helps prevent accidental exposure and follows common software secu
     Ensure you are inside the backend/ directory.
     <br>
     `cd backend`
+    <br>
     These dependencies support the backend, password hashing, JWT token creation, environment variable, and the communication between the UI and the backend. 
     <br>
     `pip install -r requirements.txt`
@@ -127,15 +128,16 @@ This approach helps prevent accidental exposure and follows common software secu
     `cd backend`
 
 2. Start the FastAPI server.
-
+    
     `uvicorn auth_api:app --reload`
-
+    
     You should see:
+    <br>
     `Uvicorn running on http://127.0.0.1:8000`
-
+    
     <img width="564" height="172" alt="Screenshot 2025-11-08 at 19 35 39" src="https://github.com/user-attachments/assets/9e8bae7c-f7d2-4bed-8ba2-76b8940c6238" />
 
-3. Open Swagger UI
+4. Open Swagger UI
     Go to http://127.0.0.1:8000/docs
     
     FastAPI automatically generates a test interface where you can try both endpoints.
