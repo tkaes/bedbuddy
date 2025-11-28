@@ -1,0 +1,57 @@
+@startuml
+title Hospital Dashboard UML
+
+' ---------------- Classes ----------------
+class Patient {
+    - id: ObjectId
+    - first_name: str
+    - last_name: str
+    - dob: str
+    - bay: int
+    - bed: str
+    - priority: str
+    - color: str
+    - presence: bool
+    --
+    + __init__(first_name, last_name, dob, bay, bed, priority, presence, color, _id=None)
+}
+
+class Database {
+    - db: Any
+    --
+    + __init__(db)
+    + insert_patient(patient: Patient) : ObjectId
+    + delete_patient(patient: Patient) : bool
+    + update_patient(patient: Patient) : bool
+    + get_bay_patients(bay: int) : list~Patient~
+    + get_all_patients() : list~Patient~
+}
+
+class BedBuddy {
+    - selected_bed
+    - current_bay: int
+    --
+    + load_db_bays()
+    + setup_sidebar()
+    + highlight_tab(bay_number)
+    + setup_patient_view()
+    + setup_bay_view()
+    + refresh_tree(bay_filter=None)
+    + update_bed_info(curr_patient)
+    + add_patient_dialog(bay, bed)
+    + edit_patient_dialog(patient: Patient)
+    + create_bed(frame, patient)
+    + show_bay(bay_number)
+    + show_all_bays()
+    + add_bay()
+    + remove_bay()
+    + add_bed()
+    + remove_bed()
+}
+
+' ---------------- Relationships ----------------
+Database  --> Patient
+BedBuddy -->  Database
+BedBuddy -->  Patient
+
+@enduml

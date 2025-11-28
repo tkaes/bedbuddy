@@ -1,0 +1,13 @@
+# BedBuddy Project. Requirements
+# Reference 
+# Python Software Foundation. (2024). Python Packaging User Guide — 
+#       Installing dependencies with pip. https://packaging.python.org/en/latest/tutorials/installing-packages/
+fastapi==0.115.0
+uvicorn==0.32.0
+motor==3.7.1
+passlib[argon2]==1.7.4
+python-jose[cryptography]==3.3.0
+python-dotenv==1.0.1
+requests==2.32.3
+pymongo==4.15.3
+argon2-cffi==25.1.0
