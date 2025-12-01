@@ -20,11 +20,13 @@ class Database {
     - db: Any
     --
     + __init__(db)
+    + create_bay(bay_num: int) : bool
+    + delete_bay(bay_num: int) : bool
     + insert_patient(patient: Patient) : ObjectId
-    + delete_patient(patient: Patient) : bool
     + update_patient(patient: Patient) : bool
-    + get_bay_patients(bay: int) : list~Patient~
-    + get_all_patients() : list~Patient~
+    + delete_patient(patient: Patient) : bool
+    + find_create_patient(bay: int, bed: int) : Patient
+    + get_bay_patients(bay: int) : list[Patient]
 }
 
 class BedBuddy {
